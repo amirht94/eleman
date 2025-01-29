@@ -1,19 +1,22 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import font_manager
+from matplotlib import rcParams
 import streamlit as st
 
+# تنظیم فونت برای پشتیبانی از فارسی
+rcParams['font.family'] = 'B Nazanin'  # یا 'Vazir'
 
 def generate_schedule():
     st.title("برنامه‌ریزی هفتگی برای دانش‌آموزان")
     
     # تعیین رشته و پایه
-    stream = st.selectbox("رشته‌ی دانش‌آموز", ["ریاضی", "تجربی", "انسانی"])
-    grade = st.selectbox("پایه‌ی تحصیلی دانش‌آموز", ["دهم", "یازدهم", "دوازدهم"])
+    stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
+    grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم): ").strip()
     
     # تعیین نوع دانش‌آموز (کنکوری/نهایی)
+    student_type = ""
     if grade == "دوازدهم":
-        student_type = st.selectbox("آیا دانش‌آموز کنکوری است یا فقط امتحانات نهایی دارد؟", ["کنکوری", "نهایی"])
+        student_type = st.radio("آیا دانش‌آموز کنکوری است یا فقط امتحانات نهایی دارد؟", ("کنکوری", "نهایی"))
     else:
         student_type = "نهایی"  # برای دانش‌آموزان دهم و یازدهم
     
@@ -29,23 +32,19 @@ def generate_schedule():
         return
     
     # دروس اضافی برای کنکوری‌ها
+    additional_subjects = []
     if grade == "دوازدهم" and student_type == "کنکوری":
         additional_subjects = [f"{sub} (یازدهم)" for sub in main_subjects] + [f"{sub} (دهم)" for sub in main_subjects]
-    else:
-        additional_subjects = []
     
     subjects = main_subjects + additional_subjects
 
     # تخصیص ساعات مطالعه هفتگی به هر درس
-    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت)", min_value=1, step=1)
+    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
     subject_hours = {}
     remaining_hours = total_weekly_hours
     
     for subject in subjects:
-        hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟ (حداکثر {remaining_hours})", min_value=0, max_value=remaining_hours)
-        if hours > remaining_hours:
-            st.warning(f"⚠️ نمی‌توانید بیش از {remaining_hours} ساعت اختصاص دهید!")
-            hours = remaining_hours
+        hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=remaining_hours, step=1)
         subject_hours[subject] = hours
         remaining_hours -= hours
     
@@ -53,60 +52,45 @@ def generate_schedule():
         st.warning(f"⚠️ {remaining_hours} ساعت باقی‌مانده و تخصیص نیافته است!")
     
     # ایجاد برنامه‌ی هفتگی با بازه‌های 1.5 ساعته
-    days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]  # جمعه حذف شد
+    days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
     schedule = {day: [] for day in days}
     
     for subject, hours in subject_hours.items():
-        total_slots = hours * 2 // 3  # تعداد بازه‌های 1.5 ساعته
-        extra_slots = total_slots % len(days)  # اضافه برای توزیع در روزها
+        total_slots = hours * 2 // 3
+        extra_slots = total_slots % len(days)
         daily_slots = total_slots // len(days)
         
         for i, day in enumerate(days):
             slots = daily_slots + (1 if i < extra_slots else 0)
             schedule[day].append({"name": subject, "slots": slots})
     
-    # محاسبه میانگین مطالعه روزانه
     avg_daily_hours = total_weekly_hours / len(days)
     
-    # نمایش برنامه
+    # نمایش جدول در Streamlit
     st.subheader("برنامه‌ی هفتگی شما:")
-    for day, tasks in schedule.items():
-        st.write(f"**{day}:**")
-        for task in tasks:
-            st.write(f"- {task['name']}: {task['slots'] * 1.5:.1f} ساعت ({task['slots']} بازه‌ی 1.5 ساعته)")
-    st.write(f"\nمیانگین ساعت مطالعه روزانه: {avg_daily_hours:.2f} ساعت")
-    
-    # ایجاد DataFrame با روزها به عنوان ردیف‌ها و دروس به عنوان ستون‌ها
-    df = pd.DataFrame(index=days + ['جمعه'])  # جمعه به عنوان ردیف در اکسل اضافه می‌شود
-    
-    for subject in subjects:
-        df[subject] = 0  # مقداردهی اولیه ستون‌ها به صفر
-    
-    for day, tasks in schedule.items():
-        for task in tasks:
-            df.at[day, task['name']] = task['slots'] * 1.5  # مقداردهی به سلول‌ها با ساعت مطالعه
-    
-    # اضافه کردن جمعه با مقدار صفر
-    for subject in subjects:
-        df.at['جمعه', subject] = 0
-    
-    # حذف ستون‌هایی که مقدار صفر دارند
-    df = df.loc[:, (df != 0).any(axis=0)]
-    
-    # ذخیره تصویر جدول
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.axis('off')
-    
+    table_data = []
 
+    for day, tasks in schedule.items():
+        row = [day]
+        for task in tasks:
+            row.append(f"{task['name']}: {task['slots'] * 1.5:.1f} ساعت")
+        table_data.append(row)
     
-    # ذخیره تصویر جدول به عنوان فایل PNG
+    df = pd.DataFrame(table_data, columns=["روز"] + [task['name'] for task in tasks])
+    st.table(df)
+
+    # ذخیره تصویر جدول
+    plt.figure(figsize=(10, 6))
+    plt.axis('off')
+    table = plt.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, loc='center', cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
+    
     filename = f"schedule_{stream}_{grade}_{student_type}.png"
     plt.savefig(filename, bbox_inches='tight', pad_inches=0.05)
     plt.close()
 
-    # نمایش تصویر جدول در Streamlit
-    st.image(filename)
-    st.success(f"✅ برنامه با موفقیت در فایل {filename} ذخیره شد!")
+    # ایجاد دکمه دانلود
+    with open(filename, "rb") as file:
+        st.download_button(label="دانلود جدول به صورت تصویر", data=file, file_name=filename, mime="image/png")
 
 # اجرای برنامه
 generate_schedule()
