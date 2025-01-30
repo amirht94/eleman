@@ -5,11 +5,27 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import streamlit as st
 
+# مخفی کردن عنوان و متن پیش‌فرض استریم‌لیت
+st.markdown("""
+    <style>
+        .css-1v3fvcr {
+            visibility: hidden;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # تنظیم فونت برای پشتیبانی از فارسی
 rcParams['font.family'] = 'B Nazanin'  # یا 'Vazir'
 
 def generate_schedule():
     st.title("برنامه‌ریزی هفتگی برای دانش‌آموزان")
+    
+    # اضافه کردن اطلاعات درباره موسسه
+    st.markdown("**جمعی از دانش‌آموختگان شریف**")
+    st.markdown("**موسسه آموزشی المان**")
+    
+    # نمایش لینک به سایت elemankonkur.com
+    st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
     
     # تعیین رشته و پایه
     stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
