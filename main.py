@@ -1,3 +1,5 @@
+from ast import main
+from numpy import add
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -21,29 +23,32 @@ def generate_schedule():
         student_type = "نهایی"  # برای دانش‌آموزان دهم و یازدهم
     
     # تعیین دروس بر اساس رشته و نوع دانش‌آموز
-    if stream == "ریاضی":
-        main_subjects = ["حسابان", "گسسته", "فیزیک", "شیمی"]
-    elif stream == "تجربی":
-        main_subjects = ["زیست", "شیمی", "ریاضی", "فیزیک"]
-    elif stream == "انسانی":
+    if stream == "ریاضی" and grade == "دهم":
+        main_subjects = ["هندسه", "فیزیک", "شیمی"]
+    elif stream == "ریاضی" and grade == "یازدهم":
+        main_subjects = ["حسابان", "آمار و احتمال", "هندسه", "فیزیک", "شیمی"]     
+    elif stream == "ریاضی" and grade == "دوازدهم":
+        main_subjects = ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]
+        if student_type == "کنکوری":
+            main_subjects += ["حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)"] + ["هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
+    elif stream == "تجربی" and (grade == "دهم" or grade == "یازدهم" or grade == "دوازدهم"):
+        main_subjects = ["زیست", "شیمی", "ریاضی", "فیزیک"]  
+        if student_type == "کنکوری":
+            main_subjects += ["زیست (یازدهم)", "ریاضی (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)"] + ["زیست (دهم)", "ریاضی (دهم)", "فیزیک (دهم)", "شیمی (دهم)"] 
+    elif stream == "انسانی" and (grade == "دهم" or grade == "یازدهم" or grade == "دوازدهم"):  
         main_subjects = ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"]
+        if student_type == "کنکوری":
+            main_subjects += ["فارسی (یازدهم)", "عربی (یازدهم)", "دین و زندگی (یازدهم)", "زبان انگلیسی (یازدهم)"] + ["فارسی (دهم)", "عربی (دهم)", "دین و زندگی (دهم)", "زبان انگلیسی (دهم)"]  
     else:
         st.error("⚠️ رشته وارد شده صحیح نیست!")
         return
-    
-    # دروس اضافی برای کنکوری‌ها
-    additional_subjects = []
-    if grade == "دوازدهم" and student_type == "کنکوری":
-        additional_subjects = [f"{sub} (یازدهم)" for sub in main_subjects] + [f"{sub} (دهم)" for sub in main_subjects]
-    
-    subjects = main_subjects + additional_subjects
 
     # تخصیص ساعات مطالعه هفتگی به هر درس
     total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
     subject_hours = {}
     remaining_hours = total_weekly_hours
     
-    for subject in subjects:
+    for subject in main_subjects:  # تغییر از `subjects` به `main_subjects`
         hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=remaining_hours, step=1)
         subject_hours[subject] = hours
         remaining_hours -= hours
