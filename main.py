@@ -1,135 +1,117 @@
-import streamlit as st
+from ast import main
+from numpy import add
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
+import streamlit as st
 
-# استایل سفارشی برای نمایش بهتر ورودی‌ها
+# مخفی کردن عنوان و متن پیش‌فرض استریم‌لیت
 st.markdown("""
     <style>
-        .stTextInput, .stNumberInput {
-            width: 100% !important;
+        .css-1v3fvcr {
+            visibility: hidden;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# عنوان اصلی برنامه
-st.title("📅 برنامه‌ریزی هفتگی مطالعه")
+# تنظیم فونت برای پشتیبانی از فارسی
+rcParams['font.family'] = 'B Nazanin'  # یا 'Vazir'
 
-# دریافت اطلاعات کاربر
-stream = st.selectbox("📚 رشته تحصیلی:", ["ریاضی", "تجربی", "انسانی"])
-grade = st.selectbox("🎓 پایه تحصیلی:", ["دهم", "یازدهم", "دوازدهم"])
-student_type = st.radio("🎯 نوع مطالعه:", ["کنکوری", "نهایی"]) if grade == "دوازدهم" else "نهایی"
+def generate_schedule():
+    st.title("برنامه‌ریزی هفتگی برای دانش‌آموزان")
+    
+    # اضافه کردن اطلاعات درباره موسسه
+    st.markdown("**جمعی از دانش‌آموختگان شریف**")
+    st.markdown("**موسسه آموزشی المان**")
+    
+    # نمایش لینک به سایت elemankonkur.com
+    st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
+    
+    # تعیین رشته و پایه
+    stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
+    grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم): ").strip()
+    
+    # تعیین نوع دانش‌آموز (کنکوری/نهایی)
+    student_type = ""
+    if grade == "دوازدهم":
+        student_type = st.radio("آیا دانش‌آموز کنکوری است یا فقط امتحانات نهایی دارد؟", ("کنکوری", "نهایی"))
+    else:
+        student_type = "نهایی"  # برای دانش‌آموزان دهم و یازدهم
+    
+    # تعیین دروس بر اساس رشته و نوع دانش‌آموز
+    if stream == "ریاضی" and grade == "دهم":
+        main_subjects = ["هندسه", "فیزیک", "شیمی"]
+    elif stream == "ریاضی" and grade == "یازدهم":
+        main_subjects = ["حسابان", "آمار و احتمال", "هندسه", "فیزیک", "شیمی"]     
+    elif stream == "ریاضی" and grade == "دوازدهم":
+        main_subjects = ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]
+        if student_type == "کنکوری":
+            main_subjects += ["حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)"] + ["هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
+    elif stream == "تجربی" and (grade == "دهم" or grade == "یازدهم" or grade == "دوازدهم"):
+        main_subjects = ["زیست", "شیمی", "ریاضی", "فیزیک"]  
+        if student_type == "کنکوری":
+            main_subjects += ["زیست (یازدهم)", "ریاضی (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)"] + ["زیست (دهم)", "ریاضی (دهم)", "فیزیک (دهم)", "شیمی (دهم)"] 
+    elif stream == "انسانی" and (grade == "دهم" or grade == "یازدهم" or grade == "دوازدهم"):  
+        main_subjects = ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"]
+        if student_type == "کنکوری":
+            main_subjects += ["فارسی (یازدهم)", "عربی (یازدهم)", "دین و زندگی (یازدهم)", "زبان انگلیسی (یازدهم)"] + ["فارسی (دهم)", "عربی (دهم)", "دین و زندگی (دهم)", "زبان انگلیسی (دهم)"]  
+    else:
+        st.error("⚠️ رشته وارد شده صحیح نیست!")
+        return
 
-# تعیین دروس بر اساس رشته و پایه تحصیلی
-subject_dict = {
-    "ریاضی": {
-        "دهم": ["هندسه", "فیزیک", "شیمی"],
-        "یازدهم": ["حسابان", "آمار و احتمال", "هندسه", "فیزیک", "شیمی"],
-        "دوازدهم": ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]
-    },
-    "تجربی": {
-        "دهم": ["زیست", "شیمی", "ریاضی", "فیزیک"],
-        "یازدهم": ["زیست", "شیمی", "ریاضی", "فیزیک"],
-        "دوازدهم": ["زیست", "شیمی", "ریاضی", "فیزیک"]
-    },
-    "انسانی": {
-        "دهم": ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"],
-        "یازدهم": ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"],
-        "دوازدهم": ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"]
-    }
-}
-
-main_subjects = subject_dict[stream][grade]
-
-if student_type == "کنکوری":
-    for prev_grade in ["یازدهم", "دهم"]:
-        main_subjects += [f"{sub} ({prev_grade})" for sub in subject_dict[stream][prev_grade]]
-
-# دریافت کل ساعات مطالعه‌ی هفتگی
-total_weekly_hours = st.number_input("⏳ کل ساعت مطالعه‌ی هفتگی:", min_value=1, step=1, key="total_hours")
-
-# مقداردهی اولیه ساعت مطالعه برای هر درس (اصلاح مشکل KeyError)
-if "subject_hours" not in st.session_state or not isinstance(st.session_state.subject_hours, dict):
-    st.session_state.subject_hours = {subject: 0 for subject in main_subjects}
-
-allocated = sum(st.session_state.subject_hours.values())
-remaining = total_weekly_hours - allocated
-st.markdown(f"### ⏳ ساعات باقی‌مانده: **{remaining} ساعت**")
-
-# تخصیص ساعت برای هر درس
-st.markdown("#### ⏬ تخصیص ساعات برای هر درس:")
-
-for subject in main_subjects:
-    if subject not in st.session_state.subject_hours:
-        st.session_state.subject_hours[subject] = 0  # مقداردهی اولیه اگر مقدار موجود نباشد
-
-    st.session_state.subject_hours[subject] = st.number_input(
-        f"⏳ ساعت برای {subject}",
-        min_value=0,
-        max_value=total_weekly_hours,
-        step=1,
-        value=st.session_state.subject_hours.get(subject, 0),
-        key=subject
-    )
-
-# محاسبه مجدد ساعات باقی‌مانده
-allocated = sum(st.session_state.subject_hours.values())
-remaining = total_weekly_hours - allocated
-st.markdown(f"### ⏳ ساعات باقی‌مانده: **{remaining} ساعت**")
-
-# هشدار در صورت تخصیص بیش از حد
-if remaining < 0:
-    st.error("⚠️ مجموع ساعت‌های تخصیص‌یافته بیش از کل ساعت مطالعه‌ی هفتگی است!")
-
-# ایجاد برنامه هفتگی
-days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
-schedule = {day: [] for day in days}
-
-for subject, hours in st.session_state.subject_hours.items():
-    if hours > 0:
-        slots = (hours * 2) // 3  # تقسیم زمان بر اساس بازه‌های 1.5 ساعته
-        extra_slots = slots % len(days)
-        daily_slots = slots // len(days)
-
+    # تخصیص ساعات مطالعه هفتگی به هر درس
+    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
+    subject_hours = {}
+    remaining_hours = total_weekly_hours
+    
+    for subject in main_subjects:  # تغییر از `subjects` به `main_subjects`
+        hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=remaining_hours, step=1)
+        subject_hours[subject] = hours
+        remaining_hours -= hours
+    
+    if remaining_hours > 0:
+        st.warning(f"⚠️ {remaining_hours} ساعت باقی‌مانده و تخصیص نیافته است!")
+    
+    # ایجاد برنامه‌ی هفتگی با بازه‌های 1.5 ساعته
+    days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
+    schedule = {day: [] for day in days}
+    
+    for subject, hours in subject_hours.items():
+        total_slots = hours * 2 // 3
+        extra_slots = total_slots % len(days)
+        daily_slots = total_slots // len(days)
+        
         for i, day in enumerate(days):
-            num_slots = daily_slots + (1 if i < extra_slots else 0)
-            if num_slots > 0:
-                schedule[day].append(f"{subject} ({num_slots * 1.5:.1f} ساعت)")
+            slots = daily_slots + (1 if i < extra_slots else 0)
+            schedule[day].append({"name": subject, "slots": slots})
+    
+    avg_daily_hours = total_weekly_hours / len(days)
+    
+    # نمایش جدول در Streamlit
+    st.subheader("برنامه‌ی هفتگی شما:")
+    table_data = []
 
-# نمایش برنامه هفتگی در جدول
-st.subheader("📆 برنامه‌ی هفتگی پیشنهادی:")
-df_schedule = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in schedule.items()]))
-st.table(df_schedule.fillna(""))
+    for day, tasks in schedule.items():
+        row = [day]
+        for task in tasks:
+            row.append(f"{task['name']}: {task['slots'] * 1.5:.1f} ساعت")
+        table_data.append(row)
+    
+    df = pd.DataFrame(table_data, columns=["روز"] + [task['name'] for task in tasks])
+    st.table(df)
 
-# رسم جدول برنامه هفتگی و امکان دانلود تصویر
-def generate_schedule_image(schedule):
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.axis("tight")
-    ax.axis("off")
+    # ذخیره تصویر جدول
+    plt.figure(figsize=(10, 6))
+    plt.axis('off')
+    table = plt.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, loc='center', cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
     
-    # داده‌های جدول
-    data = [[", ".join(schedule[day]) if schedule[day] else "❌ استراحت" for day in days]]
-    
-    # رسم جدول
-    table = ax.table(cellText=data, colLabels=days, cellLoc="center", loc="center")
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.auto_set_column_width([0, 1, 2, 3, 4, 5])
-    
-    return fig
+    filename = f"schedule_{stream}_{grade}_{student_type}.png"
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0.05)
+    plt.close()
 
-if st.button("📥 دانلود جدول برنامه هفتگی"):
-    fig = generate_schedule_image(schedule)
-    st.pyplot(fig)
-    
-    # ذخیره تصویر
-    import io
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png")
-    buf.seek(0)
-    
-    st.download_button(
-        label="📸 دانلود تصویر برنامه",
-        data=buf,
-        file_name="study_schedule.png",
-        mime="image/png"
-    )
+    # ایجاد دکمه دانلود
+    with open(filename, "rb") as file:
+        st.download_button(label="دانلود جدول به صورت تصویر", data=file, file_name=filename, mime="image/png")
+
+# اجرای برنامه
+generate_schedule()
