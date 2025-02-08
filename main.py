@@ -1,5 +1,3 @@
-from ast import main
-from numpy import add
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -27,7 +25,7 @@ def generate_schedule():
     # نمایش لینک به سایت elemankonkur.com
     st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
     
-   # تعیین رشته و پایه به صورت لیست انتخابی
+    # تعیین رشته و پایه به صورت لیست انتخابی
     stream_options = ["ریاضی", "تجربی", "انسانی"]
     grade_options = ["دهم", "یازدهم", "دوازدهم"]
     
@@ -62,9 +60,10 @@ def generate_schedule():
         st.error("⚠️ رشته وارد شده صحیح نیست!")
         return
 
-    # تخصیص ساعات مطالعه هفتگی به هر درس
+    # تعیین کل ساعات مطالعه هفتگی
+    total_weekly_hours = st.number_input("کل ساعات مطالعه هفتگی را وارد کنید:", min_value=0, step=1, value=30)
     
-    # استفاده از st.columns برای جمع‌وجور کردن فرم
+    # تخصیص ساعات مطالعه هفتگی به هر درس
     st.write("ساعات مطالعه هر درس را وارد کنید:")
     subject_hours = {}
     remaining_hours = total_weekly_hours
