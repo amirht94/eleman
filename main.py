@@ -63,14 +63,27 @@ def generate_schedule():
         return
 
     # تخصیص ساعات مطالعه هفتگی به هر درس
-    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
+    
+    # استفاده از st.columns برای جمع‌وجور کردن فرم
+    st.write("ساعات مطالعه هر درس را وارد کنید:")
     subject_hours = {}
     remaining_hours = total_weekly_hours
     
-    for subject in main_subjects:  # تغییر از `subjects` به `main_subjects`
-        hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=remaining_hours, step=1)
-        subject_hours[subject] = hours
-        remaining_hours -= hours
+    # تعداد ستون‌ها (مثلاً ۳ ستون)
+    num_columns = 3
+    columns = st.columns(num_columns)
+    
+    for i, subject in enumerate(main_subjects):
+        with columns[i % num_columns]:  # توزیع دروس بین ستون‌ها
+            hours = st.number_input(
+                f"{subject}",
+                min_value=0,
+                max_value=remaining_hours,
+                step=1,
+                key=subject  # کلید منحصر به فرد برای هر درس
+            )
+            subject_hours[subject] = hours
+            remaining_hours -= hours
     
     if remaining_hours > 0:
         st.warning(f"⚠️ {remaining_hours} ساعت باقی‌مانده و تخصیص نیافته است!")
