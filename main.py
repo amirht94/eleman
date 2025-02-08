@@ -20,18 +20,16 @@ rcParams['font.family'] = 'B Nazanin'
 def generate_schedule():
     st.title("برنامه‌ریزی هفتگی برای دانش‌آموزان")
     
-    # اضافه کردن اطلاعات درباره موسسه
+    # اطلاعات موسسه و لینک
     st.markdown("**جمعی از دانش‌آموختگان شریف**")
     st.markdown("**موسسه آموزشی المان**")
-    
-    # نمایش لینک به سایت elemankonkur.com
     st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
     
-    # تعیین رشته و پایه
+    # دریافت اطلاعات پایه
     stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
     grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم): ").strip()
     
-    # تعیین نوع دانش‌آموز (کنکوری/نهایی)
+    # تعیین نوع دانش‌آموز؛ برای دوازدهم، کاربر بین کنکوری و نهایی انتخاب می‌کند
     student_type = ""
     if grade == "دوازدهم":
         student_type = st.radio("آیا دانش‌آموز کنکوری است یا فقط امتحانات نهایی دارد؟", ("کنکوری", "نهایی"))
@@ -41,10 +39,15 @@ def generate_schedule():
     # تعیین دروس بر اساس رشته و نوع دانش‌آموز
     main_subjects = []
     if stream == "ریاضی":
+        # دروس پایه برای دانش‌آموزان دوازدهم (نهایی یا کنکوری)
         main_subjects = ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]
+        # در حالت کنکوری، علاوه بر دروس پایه، دروس یازدهم و دهم نیز اضافه می‌شوند
         if student_type == "کنکوری":
-            main_subjects += ["حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)", 
-                              "هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
+            main_subjects += [
+                "حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)",
+                "فیزیک (یازدهم)", "شیمی (یازدهم)",
+                "هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"
+            ]
     elif stream == "تجربی":
         main_subjects = ["زیست", "شیمی", "ریاضی", "فیزیک"]
     elif stream == "انسانی":
@@ -52,8 +55,8 @@ def generate_schedule():
     else:
         st.error("⚠️ رشته وارد شده صحیح نیست!")
         return
-
-    # بخش انتخاب دروس با اولویت بالا با استفاده از جدول تیک‌دار (Multiselect)
+    
+    # بخش انتخاب دروس با اولویت بالا با استفاده از st.multiselect
     st.subheader("انتخاب دروس با اولویت بالا")
     high_priority_subjects = st.multiselect("درس‌هایی که می‌خواهید اولویت بالا داشته باشند را انتخاب کنید:", main_subjects)
     
@@ -64,14 +67,18 @@ def generate_schedule():
     else:
         st.write("هیچ درسی با اولویت بالا انتخاب نشده است.")
     
-    # تخصیص ساعات مطالعه برای هر درس به صورت خلاصه و در یک ردیف (با استفاده از st.columns)
+    # ورودی کل ساعت مطالعه‌ی هفتگی
+    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت):", min_value=1, step=1)
+    
+    # تخصیص ساعات مطالعه برای هر درس به صورت ردیفی و در چند ستون
     st.subheader("تخصیص ساعات مطالعه برای هر درس")
     subject_hours = {}
     num_cols = 3  # تعداد ستون در هر ردیف
+    default_val = total_weekly_hours // len(main_subjects) if main_subjects else 0
     for i in range(0, len(main_subjects), num_cols):
         cols = st.columns(num_cols)
         for j, subject in enumerate(main_subjects[i:i+num_cols]):
-            subject_hours[subject] = cols[j].number_input(f"{subject}", min_value=0, value=0, step=1)
+            subject_hours[subject] = cols[j].number_input(f"{subject}", min_value=0, value=default_val, step=1)
     
     # تنظیم محدودیت‌های روزانه
     st.subheader("محدودیت‌های روزانه")
@@ -80,7 +87,7 @@ def generate_schedule():
     for day in days:
         max_daily_hours[day] = st.number_input(f"حداکثر ساعت مطالعه برای {day}:", min_value=1, max_value=24, step=1)
     
-    # ایجاد برنامه‌ی هفتگی با توزیع متعادل
+    # ایجاد برنامه‌ی هفتگی با توزیع متعادل ساعات مطالعه بین روزهای هفته
     schedule = {day: [] for day in days}
     for subject, hours in subject_hours.items():
         for i in range(hours):
@@ -92,11 +99,11 @@ def generate_schedule():
     st.subheader("برنامه‌ی هفتگی شما:")
     table_data = [[day] + [f"{s[0]}: {s[1]} ساعت" for s in tasks] for day, tasks in schedule.items()]
     
-    # تعیین ستون‌ها به صورت دینامیک
+    # تعیین ستون‌ها به صورت دینامیک بر اساس دروسی که در برنامه وجود دارند
     all_subjects_in_schedule = list({s[0] for tasks in schedule.values() for s in tasks})
     columns = ["روز"] + all_subjects_in_schedule
     
-    # تطبیق تعداد ستون‌ها در هر سطر
+    # تکمیل سطرها به تعداد ستون‌های برابر
     new_table_data = []
     for row in table_data:
         row_extended = row + [""] * (len(columns) - len(row))
@@ -108,13 +115,14 @@ def generate_schedule():
     # ذخیره تصویر جدول
     plt.figure(figsize=(10, 6))
     plt.axis('off')
-    table = plt.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, loc='center', cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
+    table_plot = plt.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, 
+                           loc='center', cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
     
     filename = f"schedule_{stream}_{grade}_{student_type}.png"
     plt.savefig(filename, bbox_inches='tight', pad_inches=0.05)
     plt.close()
     
-    # ایجاد دکمه دانلود
+    # دکمه دانلود تصویر
     with open(filename, "rb") as file:
         st.download_button(label="دانلود جدول به صورت تصویر", data=file, file_name=filename, mime="image/png")
 
