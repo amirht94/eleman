@@ -3,11 +3,30 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import streamlit as st
 
-# مخفی کردن عنوان و متن پیش‌فرض استریم‌لیت
+# مخفی کردن عنوان و متن پیش‌فرض استریم‌لیت و راست‌چین کردن کل صفحه
 st.markdown("""
     <style>
+        /* مخفی کردن عنوان و متن پیش‌فرض استریم‌لیت */
         .css-1v3fvcr {
             visibility: hidden;
+        }
+        
+        /* راست‌چین کردن کل صفحه */
+        body {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        /* راست‌چین کردن جدول */
+        .stDataFrame, .stTable {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        /* راست‌چین کردن عناصر فرم */
+        .stSelectbox, .stRadio, .stNumberInput, .stButton {
+            direction: rtl;
+            text-align: right;
         }
     </style>
 """, unsafe_allow_html=True)
