@@ -64,19 +64,14 @@ def generate_schedule():
     else:
         st.write("هیچ درسی با اولویت بالا انتخاب نشده است.")
     
-    # تخصیص ساعات مطالعه هفتگی به هر درس
-    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
+    # تخصیص ساعات مطالعه برای هر درس به صورت خلاصه و در یک ردیف (با استفاده از st.columns)
+    st.subheader("تخصیص ساعات مطالعه برای هر درس")
     subject_hours = {}
-    remaining_hours = total_weekly_hours
-    
-    for subject in main_subjects:
-        max_hours = remaining_hours if remaining_hours > 0 else 0
-        hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=max_hours, step=1)
-        subject_hours[subject] = hours
-        remaining_hours -= hours
-    
-    if remaining_hours > 0:
-        st.warning(f"⚠️ {remaining_hours} ساعت باقی‌مانده و تخصیص نیافته است!")
+    num_cols = 3  # تعداد ستون در هر ردیف
+    for i in range(0, len(main_subjects), num_cols):
+        cols = st.columns(num_cols)
+        for j, subject in enumerate(main_subjects[i:i+num_cols]):
+            subject_hours[subject] = cols[j].number_input(f"{subject}", min_value=0, value=0, step=1)
     
     # تنظیم محدودیت‌های روزانه
     st.subheader("محدودیت‌های روزانه")
