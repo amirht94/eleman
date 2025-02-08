@@ -47,8 +47,8 @@ if student_type == "کنکوری":
 # دریافت کل ساعات مطالعه‌ی هفتگی
 total_weekly_hours = st.number_input("⏳ کل ساعت مطالعه‌ی هفتگی:", min_value=1, step=1, key="total_hours")
 
-# مقداردهی اولیه ساعت مطالعه برای هر درس
-if "subject_hours" not in st.session_state:
+# مقداردهی اولیه ساعت مطالعه برای هر درس (اصلاح مشکل KeyError)
+if "subject_hours" not in st.session_state or not isinstance(st.session_state.subject_hours, dict):
     st.session_state.subject_hours = {subject: 0 for subject in main_subjects}
 
 allocated = sum(st.session_state.subject_hours.values())
@@ -57,13 +57,17 @@ st.markdown(f"### ⏳ ساعات باقی‌مانده: **{remaining} ساعت**
 
 # تخصیص ساعت برای هر درس
 st.markdown("#### ⏬ تخصیص ساعات برای هر درس:")
+
 for subject in main_subjects:
+    if subject not in st.session_state.subject_hours:
+        st.session_state.subject_hours[subject] = 0  # مقداردهی اولیه اگر مقدار موجود نباشد
+
     st.session_state.subject_hours[subject] = st.number_input(
         f"⏳ ساعت برای {subject}",
         min_value=0,
         max_value=total_weekly_hours,
         step=1,
-        value=st.session_state.subject_hours[subject],
+        value=st.session_state.subject_hours.get(subject, 0),
         key=subject
     )
 
