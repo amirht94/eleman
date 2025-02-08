@@ -59,12 +59,19 @@ def generate_schedule():
         st.error("⚠️ رشته وارد شده صحیح نیست!")
         return
 
+    # اولویت‌بندی دروس
+    st.subheader("اولویت‌بندی دروس")
+    subject_priority = {}
+    for subject in main_subjects:
+        priority = st.selectbox(f"اولویت درس {subject} را انتخاب کنید:", ["بالا", "متوسط", "پایین"])
+        subject_priority[subject] = priority
+
     # تخصیص ساعات مطالعه هفتگی به هر درس
     total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
     subject_hours = {}
     remaining_hours = total_weekly_hours
     
-    for subject in main_subjects:  # تغییر از `subjects` به `main_subjects`
+    for subject in main_subjects:
         hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=remaining_hours, step=1)
         subject_hours[subject] = hours
         remaining_hours -= hours
@@ -72,21 +79,22 @@ def generate_schedule():
     if remaining_hours > 0:
         st.warning(f"⚠️ {remaining_hours} ساعت باقی‌مانده و تخصیص نیافته است!")
     
-    # ایجاد برنامه‌ی هفتگی با بازه‌های 1.5 ساعته
+    # تنظیم محدودیت‌های روزانه
+    st.subheader("محدودیت‌های روزانه")
     days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
+    max_daily_hours = {}
+    for day in days:
+        max_daily_hours[day] = st.number_input(f"حداکثر ساعت مطالعه برای {day}:", min_value=1, max_value=24, step=1)
+
+    # ایجاد برنامه‌ی هفتگی با توزیع متعادل
     schedule = {day: [] for day in days}
-    
     for subject, hours in subject_hours.items():
         total_slots = hours * 2 // 3
-        extra_slots = total_slots % len(days)
-        daily_slots = total_slots // len(days)
-        
-        for i, day in enumerate(days):
-            slots = daily_slots + (1 if i < extra_slots else 0)
-            schedule[day].append({"name": subject, "slots": slots})
-    
-    avg_daily_hours = total_weekly_hours / len(days)
-    
+        for i in range(total_slots):
+            day = days[i % len(days)]
+            if sum(task['slots'] for task in schedule[day]) < max_daily_hours[day] * 2 // 3:
+                schedule[day].append({"name": subject, "slots": 1})
+
     # نمایش جدول در Streamlit
     st.subheader("برنامه‌ی هفتگی شما:")
     table_data = []
