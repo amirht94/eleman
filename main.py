@@ -101,7 +101,15 @@ def generate_schedule():
         table_data.append(row)
     
     df = pd.DataFrame(table_data, columns=["روز"] + [task['name'] for task in tasks])
-    st.table(df)
+    
+    # تنظیمات استایل برای جدول
+    styled_df = df.style.set_table_styles([
+        {'selector': 'thead th', 'props': [('background-color', '#4CAF50'), ('color', 'white')]},
+        {'selector': 'tbody tr:nth-child(even)', 'props': [('background-color', '#f2f2f2')]},
+        {'selector': 'tbody tr:hover', 'props': [('background-color', '#ddd')]}
+    ]).set_properties(**{'text-align': 'center'})
+    
+    st.write(styled_df.to_html(), unsafe_allow_html=True)
 
     # ذخیره تصویر جدول
     plt.figure(figsize=(10, 6))
