@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import streamlit as st
 
-# پنهان کردن عنوان و متن پیش‌فرض Streamlit
+# پنهان کردن عنوان پیش‌فرض Streamlit
 st.markdown("""
     <style>
         .css-1v3fvcr {
@@ -23,25 +23,24 @@ def generate_schedule():
     st.markdown("**موسسه آموزشی المان**")
     st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
     
-    # دریافت ورودی‌های اولیه (رشته و پایه) در قالب ستون‌ها
+    # دریافت اطلاعات اولیه: رشته و پایه (با استفاده از ستون‌ها برای بهبود نمایش)
     col1, col2 = st.columns(2)
     with col1:
-        stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
+        stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی):").strip()
     with col2:
-        grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم): ").strip()
+        grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم):").strip()
     
-    # در صورتی که رشته یا پایه وارد نشده باشد، ادامه اجرا متوقف می‌شود
     if not stream or not grade:
         st.info("لطفاً ابتدا رشته و پایه را وارد کنید.")
         st.stop()
     
-    # تعیین نوع دانش‌آموز؛ در صورت پایه دوازدهم، کاربر نوع دانش‌آموز (کنکوری/نهایی) را انتخاب می‌کند
+    # تعیین نوع دانش‌آموز برای پایه دوازدهم
     if grade == "دوازدهم":
         student_type = st.radio("آیا دانش‌آموز کنکوری است یا فقط امتحانات نهایی دارد؟", ("کنکوری", "نهایی"))
     else:
         student_type = "نهایی"
     
-    # تعیین دروس بر اساس رشته و پایه
+    # تعیین لیست دروس بر اساس رشته و پایه
     if stream == "ریاضی":
         if grade == "دهم":
             main_subjects = ["هندسه", "فیزیک", "شیمی"]
@@ -50,8 +49,9 @@ def generate_schedule():
         elif grade == "دوازدهم":
             main_subjects = ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]
             if student_type == "کنکوری":
-                main_subjects += ["حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)"]
-                main_subjects += ["هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
+                main_subjects += ["حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)",
+                                  "فیزیک (یازدهم)", "شیمی (یازدهم)",
+                                  "هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
         else:
             st.error("پایه وارد شده صحیح نیست!")
             st.stop()
@@ -59,8 +59,8 @@ def generate_schedule():
         if grade in ["دهم", "یازدهم", "دوازدهم"]:
             main_subjects = ["زیست", "شیمی", "ریاضی", "فیزیک"]
             if grade == "دوازدهم" and student_type == "کنکوری":
-                main_subjects += ["زیست (یازدهم)", "ریاضی (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)"]
-                main_subjects += ["زیست (دهم)", "ریاضی (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
+                main_subjects += ["زیست (یازدهم)", "ریاضی (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)",
+                                  "زیست (دهم)", "ریاضی (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
         else:
             st.error("پایه وارد شده صحیح نیست!")
             st.stop()
@@ -68,8 +68,8 @@ def generate_schedule():
         if grade in ["دهم", "یازدهم", "دوازدهم"]:
             main_subjects = ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"]
             if grade == "دوازدهم" and student_type == "کنکوری":
-                main_subjects += ["فارسی (یازدهم)", "عربی (یازدهم)", "دین و زندگی (یازدهم)", "زبان انگلیسی (یازدهم)"]
-                main_subjects += ["فارسی (دهم)", "عربی (دهم)", "دین و زندگی (دهم)", "زبان انگلیسی (دهم)"]
+                main_subjects += ["فارسی (یازدهم)", "عربی (یازدهم)", "دین و زندگی (یازدهم)", "زبان انگلیسی (یازدهم)",
+                                  "فارسی (دهم)", "عربی (دهم)", "دین و زندگی (دهم)", "زبان انگلیسی (دهم)"]
         else:
             st.error("پایه وارد شده صحیح نیست!")
             st.stop()
@@ -77,68 +77,85 @@ def generate_schedule():
         st.error("رشته وارد شده صحیح نیست!")
         st.stop()
     
-    # فرم برای دریافت کل ساعت مطالعه هفتگی و تخصیص ساعت به هر درس
-    with st.form("study_hours_form"):
-        total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت): ", min_value=1, step=1)
-        st.write("لطفاً تخصیص ساعت مطالعه برای هر درس را مشخص کنید:")
-        subject_hours = {}
+    # دریافت کل ساعت مطالعه‌ی هفتگی
+    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت):", min_value=1, step=1, key="total_hours")
+    
+    # اگر متغیر subject_hours قبلاً در session_state تعریف نشده باشد، آن را مقداردهی اولیه می‌کنیم.
+    if "subject_hours" not in st.session_state:
+        st.session_state.subject_hours = {subject: 0 for subject in main_subjects}
+    else:
+        # در صورتی که دروس تغییر کرده باشند، موارد جدید را اضافه می‌کنیم.
         for subject in main_subjects:
-            hours = st.number_input(f"{subject} (ساعت)", min_value=0, step=1, key=subject)
-            subject_hours[subject] = hours
-        submitted = st.form_submit_button("ثبت برنامه")
+            if subject not in st.session_state.subject_hours:
+                st.session_state.subject_hours[subject] = 0
     
-    if not submitted:
-        st.info("لطفاً اطلاعات را وارد کرده و فرم را ارسال کنید.")
-        st.stop()
+    # محاسبه تخصیص کل شده و ساعات باقی‌مانده
+    allocated = sum(st.session_state.subject_hours.get(sub, 0) for sub in main_subjects)
+    remaining = total_weekly_hours - allocated
+    st.markdown(f"### ساعات باقی‌مانده: **{remaining}**")
     
-    # بررسی تطابق مجموع ساعات تخصیص‌یافته با کل ساعت مطالعه‌ی هفتگی
-    total_allocated = sum(subject_hours.values())
-    if total_allocated != total_weekly_hours:
-        st.error(f"مجموع ساعت‌های تخصیص داده شده ({total_allocated}) با کل ساعت مطالعه‌ی هفتگی ({total_weekly_hours}) برابر نیست. لطفاً مجدداً بررسی کنید.")
-        st.stop()
+    st.markdown("#### لطفاً تخصیص ساعت برای هر درس را مشخص کنید:")
+    # نمایش هر درس به همراه ورودی تخصیص ساعت؛ با استفاده از ستون‌ها جهت صرفه‌جویی در فضا
+    for subject in main_subjects:
+        colA, colB = st.columns([2, 1])
+        with colA:
+            st.write(subject)
+        with colB:
+            # مقدار پیش‌فرض از session_state گرفته شده است؛ تغییرات به محض وارد شدن ذخیره می‌شود.
+            st.session_state.subject_hours[subject] = st.number_input(
+                f"ساعت برای {subject}",
+                min_value=0,
+                step=1,
+                value=st.session_state.subject_hours[subject],
+                key=subject
+            )
+        # پس از هر ورودی، دوباره مقدار تخصیص شده و باقی‌مانده محاسبه می‌شود.
+        allocated = sum(st.session_state.subject_hours.get(sub, 0) for sub in main_subjects)
+        remaining = total_weekly_hours - allocated
+        st.write(f"ساعات باقی‌مانده: {remaining}")
     
-    # ایجاد برنامه هفتگی؛ هر اسلات معادل 1.5 ساعت است
-    days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
-    schedule = {day: [] for day in days}
-    
-    for subject, hours in subject_hours.items():
-        # محاسبه تعداد اسلات به ازای هر درس؛ به صورت تقریبی (ساعات * 2/3)
-        total_slots = int(hours * 2 / 3)
-        daily_slots = total_slots // len(days)
-        extra_slots = total_slots % len(days)
-        for i, day in enumerate(days):
-            slots = daily_slots + (1 if i < extra_slots else 0)
-            schedule[day].append({"name": subject, "slots": slots})
-    
-    # نمایش برنامه هفتگی در قالب جدول
-    st.subheader("برنامه‌ی هفتگی شما:")
-    table_data = []
-    for day in days:
-        row = [day]
-        # سطر را بر اساس ترتیب دروس اصلی تکمیل می‌کنیم
-        for subject in main_subjects:
-            # جستجو برای دریافت اطلاعات تخصیص‌یافته به هر درس در آن روز
-            task = next((item for item in schedule[day] if item["name"] == subject), None)
-            hours_str = f"{task['slots'] * 1.5:.1f} ساعت" if task else "0 ساعت"
-            row.append(hours_str)
-        table_data.append(row)
-    
-    columns = ["روز"] + main_subjects
-    df = pd.DataFrame(table_data, columns=columns)
-    st.table(df)
-    
-    # ذخیره جدول به صورت تصویر با استفاده از matplotlib
-    plt.figure(figsize=(10, 6))
-    plt.axis('off')
-    table_plot = plt.table(cellText=df.values, colLabels=df.columns, loc='center',
-                           cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
-    filename = f"schedule_{stream}_{grade}_{student_type}.png"
-    plt.savefig(filename, bbox_inches='tight', pad_inches=0.05)
-    plt.close()
-    
-    # دکمه دانلود تصویر
-    with open(filename, "rb") as file:
-        st.download_button(label="دانلود جدول به صورت تصویر", data=file, file_name=filename, mime="image/png")
+    # دکمه ثبت برنامه؛ پس از کلیک، در صورت تطابق مجموع ساعت‌ها، برنامه ساخته می‌شود.
+    if st.button("ثبت برنامه"):
+        if remaining != 0:
+            st.error(f"مجموع ساعت‌های تخصیص داده شده ({allocated}) با کل ساعت مطالعه‌ی هفتگی ({total_weekly_hours}) برابر نیست!")
+            st.stop()
+        
+        # ایجاد برنامه هفتگی؛ هر اسلات معادل 1.5 ساعت است.
+        days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
+        schedule = {day: [] for day in days}
+        for subject, hours in st.session_state.subject_hours.items():
+            total_slots = int(hours * 2 / 3)  # تبدیل ساعت به تعداد اسلات (هر اسلات 1.5 ساعت)
+            daily_slots = total_slots // len(days)
+            extra_slots = total_slots % len(days)
+            for i, day in enumerate(days):
+                slots = daily_slots + (1 if i < extra_slots else 0)
+                schedule[day].append({"name": subject, "slots": slots})
+        
+        # نمایش برنامه هفتگی به صورت جدول
+        st.subheader("برنامه‌ی هفتگی شما:")
+        table_data = []
+        for day in days:
+            row = [day]
+            for subject in main_subjects:
+                task = next((item for item in schedule[day] if item["name"] == subject), None)
+                hours_str = f"{task['slots'] * 1.5:.1f} ساعت" if task else "0 ساعت"
+                row.append(hours_str)
+            table_data.append(row)
+        columns = ["روز"] + main_subjects
+        df = pd.DataFrame(table_data, columns=columns)
+        st.table(df)
+        
+        # ذخیره جدول به صورت تصویر با استفاده از matplotlib
+        plt.figure(figsize=(10, 6))
+        plt.axis('off')
+        table_plot = plt.table(cellText=df.values, colLabels=df.columns, loc='center',
+                               cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
+        filename = f"schedule_{stream}_{grade}_{student_type}.png"
+        plt.savefig(filename, bbox_inches='tight', pad_inches=0.05)
+        plt.close()
+        
+        with open(filename, "rb") as file:
+            st.download_button(label="دانلود جدول به صورت تصویر", data=file, file_name=filename, mime="image/png")
 
 # اجرای برنامه
 generate_schedule()
