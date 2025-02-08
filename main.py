@@ -27,9 +27,12 @@ def generate_schedule():
     # نمایش لینک به سایت elemankonkur.com
     st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
     
-    # تعیین رشته و پایه
-    stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
-    grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم): ").strip()
+    # تعیین رشته و پایه به صورت لیست انتخابی
+    stream_options = ["ریاضی", "تجربی", "انسانی"]
+    grade_options = ["دهم", "یازدهم", "دوازدهم"]
+    
+    stream = st.selectbox("رشته‌ی دانش‌آموز:", stream_options)
+    grade = st.selectbox("پایه‌ی تحصیلی دانش‌آموز:", grade_options)
     
     # تعیین نوع دانش‌آموز (کنکوری/نهایی)
     student_type = ""
@@ -64,7 +67,7 @@ def generate_schedule():
     subject_hours = {}
     remaining_hours = total_weekly_hours
     
-    for subject in main_subjects:  # تغییر از `subjects` به `main_subjects`
+    for subject in main_subjects:
         hours = st.number_input(f"چند ساعت از {total_weekly_hours} ساعت را برای {subject} اختصاص می‌دهید؟", min_value=0, max_value=remaining_hours, step=1)
         subject_hours[subject] = hours
         remaining_hours -= hours
@@ -98,7 +101,19 @@ def generate_schedule():
         table_data.append(row)
     
     df = pd.DataFrame(table_data, columns=["روز"] + [task['name'] for task in tasks])
-    st.table(df)
+    
+    # رنگ‌آمیزی جدول
+    def color_cells(val):
+        color = "lightblue" if "هندسه" in val else \
+                "lightgreen" if "فیزیک" in val else \
+                "lightcoral" if "شیمی" in val else \
+                "lightyellow" if "زیست" in val else \
+                "lightpink" if "ریاضی" in val else \
+                "lightgray"
+        return f'background-color: {color}'
+    
+    styled_df = df.style.applymap(color_cells)
+    st.table(styled_df)
 
     # ذخیره تصویر جدول
     plt.figure(figsize=(10, 6))
