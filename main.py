@@ -15,84 +15,58 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # تنظیم فونت برای پشتیبانی از فارسی
-rcParams['font.family'] = 'B Nazanin'  # یا 'Vazir'
+rcParams['font.family'] = 'B Nazanin'
 
 def generate_schedule():
     st.title("برنامه‌ریزی هفتگی برای دانش‌آموزان")
     
+    # اضافه کردن اطلاعات درباره موسسه
     st.markdown("**جمعی از دانش‌آموختگان شریف**")
     st.markdown("**موسسه آموزشی المان**")
     
+    # نمایش لینک به سایت elemankonkur.com
     st.markdown("برای کسب اطلاعات بیشتر، به سایت [elemankonkur.com](http://elemankonkur.com) مراجعه کنید.")
     
+    # تعیین رشته و پایه
     stream = st.text_input("رشته‌ی دانش‌آموز (ریاضی/تجربی/انسانی): ").strip()
     grade = st.text_input("پایه‌ی تحصیلی دانش‌آموز (دهم/یازدهم/دوازدهم): ").strip()
     
+    # تعیین نوع دانش‌آموز (کنکوری/نهایی)
     student_type = ""
     if grade == "دوازدهم":
         student_type = st.radio("آیا دانش‌آموز کنکوری است یا فقط امتحانات نهایی دارد؟", ("کنکوری", "نهایی"))
     else:
         student_type = "نهایی"
     
-    subjects = {
-        "ریاضی": {"دهم": ["هندسه", "فیزیک", "شیمی"], "یازدهم": ["حسابان", "آمار و احتمال", "هندسه", "فیزیک", "شیمی"], "دوازدهم": ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]},
-        "تجربی": {"دهم": ["زیست", "شیمی", "ریاضی", "فیزیک"], "یازدهم": ["زیست", "شیمی", "ریاضی", "فیزیک"], "دوازدهم": ["زیست", "شیمی", "ریاضی", "فیزیک"]},
-        "انسانی": {"دهم": ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"], "یازدهم": ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"], "دوازدهم": ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"]}
-    }
-    
-    if stream in subjects and grade in subjects[stream]:
-        main_subjects = subjects[stream][grade]
-        if student_type == "کنکوری" and grade == "دوازدهم":
-            main_subjects += [f"{s} ({y})" for y in ["دهم", "یازدهم"] for s in subjects[stream][y]]
+    # تعیین دروس بر اساس رشته و نوع دانش‌آموز
+    main_subjects = []
+    if stream == "ریاضی":
+        main_subjects = ["گسسته", "حسابان", "هندسه", "فیزیک", "شیمی"]
+        if student_type == "کنکوری":
+            main_subjects += ["حسابان (یازدهم)", "آمار و احتمال (یازدهم)", "هندسه (یازدهم)", "فیزیک (یازدهم)", "شیمی (یازدهم)", "هندسه (دهم)", "فیزیک (دهم)", "شیمی (دهم)"]
+    elif stream == "تجربی":
+        main_subjects = ["زیست", "شیمی", "ریاضی", "فیزیک"]
+    elif stream == "انسانی":
+        main_subjects = ["فارسی", "عربی", "دین و زندگی", "زبان انگلیسی"]
     else:
-        st.error("⚠️ رشته یا پایه وارد شده صحیح نیست!")
+        st.error("⚠️ رشته وارد شده صحیح نیست!")
         return
 
+    # اولویت‌بندی دروس
     st.subheader("اولویت‌بندی دروس")
-    subject_priority = {s: st.selectbox(f"اولویت درس {s}:", ["بالا", "متوسط", "پایین"]) for s in main_subjects}
-    
-    total_weekly_hours = st.number_input("کل ساعت مطالعه‌ی هفتگی (به ساعت):", min_value=1, step=1)
-    subject_hours = {}
-    remaining_hours = total_weekly_hours
-    
+    high_priority_subjects = []
     for subject in main_subjects:
-        max_hours = remaining_hours if remaining_hours > 0 else 0
-        hours = st.number_input(f"ساعات مطالعه برای {subject}:", min_value=0, max_value=max_hours, step=1)
-        subject_hours[subject] = hours
-        remaining_hours -= hours
+        priority = st.selectbox(f"اولویت درس {subject} را انتخاب کنید:", ["بالا", "متوسط", "پایین"])
+        if priority == "بالا":
+            high_priority_subjects.append(subject)
     
-    if remaining_hours > 0:
-        st.warning(f"⚠️ {remaining_hours} ساعت باقی‌مانده و تخصیص نیافته است!")
-    
-    st.subheader("محدودیت‌های روزانه")
-    days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه"]
-    max_daily_hours = {d: st.number_input(f"حداکثر ساعت مطالعه برای {d}:", min_value=1, max_value=24, step=1) for d in days}
-    
-    schedule = {d: [] for d in days}
-    for subject, hours in subject_hours.items():
-        for i in range(hours):
-            day = days[i % len(days)]
-            if sum(t[1] for t in schedule[day]) < max_daily_hours[day]:
-                schedule[day].append((subject, 1))
-    
-    st.subheader("برنامه‌ی هفتگی شما:")
-    table_data = [[d] + [f"{s[0]}: {s[1]} ساعت" for s in tasks] for d, tasks in schedule.items()]
-    
-    if any(table_data):
-        columns = ["روز"] + list(set(s[0] for day in schedule.values() for s in day))
-        df = pd.DataFrame(table_data, columns=columns)
-        st.table(df)
-        
-        plt.figure(figsize=(10, 6))
-        plt.axis('off')
-        plt.table(cellText=df.values, colLabels=df.columns, loc='center', cellLoc='center', colColours=["#f5f5f5"] * len(df.columns))
-        filename = f"schedule_{stream}_{grade}_{student_type}.png"
-        plt.savefig(filename, bbox_inches='tight', pad_inches=0.05)
-        plt.close()
-        
-        with open(filename, "rb") as file:
-            st.download_button(label="دانلود جدول به صورت تصویر", data=file, file_name=filename, mime="image/png")
+    # نمایش جدول فقط برای دروس با اولویت بالا
+    st.subheader("دروس با اولویت بالا")
+    if high_priority_subjects:
+        df_high_priority = pd.DataFrame(high_priority_subjects, columns=["درس‌های با اولویت بالا"])
+        st.table(df_high_priority)
     else:
-        st.error("⚠️ برنامه‌ی هفتگی خالی است. لطفاً ساعات را به درستی وارد کنید.")
+        st.write("هیچ درسی با اولویت بالا انتخاب نشده است.")
 
+# اجرای برنامه
 generate_schedule()
